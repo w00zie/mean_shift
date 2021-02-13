@@ -1,0 +1,9 @@
+.vscode/
+bin/
+build/
+timings/
+gathered_timings/
+old/
+sm
+naive
+mean_shift_openmp*

@@ -1,0 +1,42 @@
+#include <cassert>
+#include <chrono>
+#include "../../include/meanshift.h"
+#include "../../include/container_io.h"
+#include "constants_2d.h"
+#include <thread>
+
+// Hyperparameters
+constexpr auto bandwidth = constants::case_2000::bandwidth;
+constexpr auto radius = constants::case_2000::radius;
+constexpr auto min_distance = constants::case_2000::min_distance;
+constexpr auto niter = constants::niter;
+constexpr auto num_trials = constants::num_trials;
+// I/O
+constexpr auto num_points = constants::case_2000::num_points;
+constexpr auto dim = constants::dim;
+constexpr auto num_centroids = constants::num_centroids;
+const auto data_path = constants::case_2000::data_path;
+const auto out_file = constants::case_2000::out_file;
+
+double run_once() {
+
+    mean_shift::mat<float, num_points, dim> data = mean_shift::io::load_csv<float, num_points, dim>(data_path, ',');    
+    auto start = std::chrono::high_resolution_clock::now();
+    const std::vector<mean_shift::vec<float, dim>> centroids = mean_shift::seq::cluster_points<float, num_points, dim>(data, niter, bandwidth, radius, min_distance);    
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    return duration;
+}
+
+int main(){
+    mean_shift::vec<double, num_trials> exec_times;
+    for (size_t i = 0; i < num_trials; ++i) {
+        exec_times[i] = run_once();
+    }
+
+    std::this_thread::sleep_for (std::chrono::seconds(1));
+
+    mean_shift::io::write_csv<double, num_trials>(exec_times, out_file);
+
+    return 0;
+}
